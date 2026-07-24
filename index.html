@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Save Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Mata';
+    src: url('Mata_Regular.woff2') format('woff2'),
+         url('Mata_Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --bg: #0D0D16;
+    --surface: #15151F;
+    --surface-hover: #1B1B28;
+    --border: rgba(237,237,242,0.08);
+    --text: #EDEDF2;
+    --text-secondary: #ABA8C2;
+    --text-tertiary: #6F6C82;
+    --sanctuary: #8C7CF0;
+    --play: #52D6B4;
+    --manual: #E8A360;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── ambient atmosphere ── */
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .atmosphere::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 45% at 12% 18%, rgba(140,124,240,0.09) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 88% 22%, rgba(82,214,180,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 45% 50% at 75% 85%, rgba(232,163,96,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 20% 78%, rgba(140,124,240,0.04) 0%, transparent 70%);
+  }
+
+  .grain {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain-drift 8s steps(10) infinite;
+  }
+
+  @keyframes grain-drift {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-2%, -3%); }
+    30% { transform: translate(3%, 1%); }
+    50% { transform: translate(-1%, 4%); }
+    70% { transform: translate(2%, -2%); }
+    90% { transform: translate(-3%, 2%); }
+  }
+
+  .dot-field {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(237,237,242,0.07) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: orb-float 22s ease-in-out infinite;
+  }
+
+  .orb--sanctuary {
+    width: 340px;
+    height: 340px;
+    background: rgba(140,124,240,0.12);
+    top: -8%;
+    left: -6%;
+    animation-delay: 0s;
+  }
+
+  .orb--play {
+    width: 280px;
+    height: 280px;
+    background: rgba(82,214,180,0.1);
+    top: 8%;
+    right: -4%;
+    animation-delay: -7s;
+  }
+
+  .orb--manual {
+    width: 260px;
+    height: 260px;
+    background: rgba(232,163,96,0.09);
+    bottom: 10%;
+    left: 35%;
+    animation-delay: -14s;
+  }
+
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(18px, -24px) scale(1.04); }
+    66% { transform: translate(-14px, 16px) scale(0.97); }
+  }
+
+  /* frame brackets — subtle checkpoint motif */
+  .frame {
+    position: fixed;
+    inset: 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  .frame-corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: rgba(237,237,242,0.12);
+    border-style: solid;
+  }
+
+  .frame-corner--tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
+  .frame-corner--tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
+  .frame-corner--bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+  .frame-corner--br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+  /* signature element: slow attention-glow that follows the cursor */
+  #glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(140,124,240,0.06) 0%, rgba(140,124,240,0) 70%);
+    transform: translate(-50%, -50%);
+    transition:
+      left 2.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+      top 2.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+      background 1.8s ease;
+    z-index: 0;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12vh 24px 10vh;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 9vh;
+  }
+
+  .hero-inner {
+    animation: rise 1.1s ease-out;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-mark {
+    display: block;
+    width: auto;
+    height: 20px;
+    margin: 0 auto 22px;
+    color: var(--text-tertiary);
+    opacity: 0.72;
+    animation: rise 1.1s ease-out 0.05s both;
+  }
+
+  .logo-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 22px;
+    animation: rise 1.1s ease-out 0.1s both;
+  }
+
+  .logo-glow {
+    position: absolute;
+    inset: -30px -50px;
+    background: radial-gradient(ellipse at center, rgba(140,124,240,0.08) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .logo {
+    font-family: 'Mata', 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(40px, 8vw, 64px);
+    letter-spacing: 0.2px;
+    margin: 0;
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(
+      165deg,
+      var(--text) 0%,
+      rgba(237,237,242,0.88) 45%,
+      rgba(171,168,194,0.95) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo .mark {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.32em;
+    -webkit-text-fill-color: var(--sanctuary);
+    color: var(--sanctuary);
+    vertical-align: super;
+    margin-left: 4px;
+    opacity: 0.85;
+  }
+
+  .subhead {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--text-secondary);
+    margin: 0 auto;
+    font-weight: 400;
+    max-width: 480px;
+    line-height: 1.65;
+    animation: rise 1.1s ease-out 0.18s both;
+  }
+
+  .footnote-scratch {
+    position: relative;
+    max-width: 460px;
+    margin: 18px auto 0;
+    text-align: left;
+  }
+
+  .footnote {
+    margin: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: var(--text-tertiary);
+  }
+
+  .footnote::before {
+    content: "*";
+    color: var(--sanctuary);
+    opacity: 0.8;
+  }
+
+  .footnote-overlay {
+    position: absolute;
+    inset: 0;
+    cursor: crosshair;
+    touch-action: none;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .footnote-overlay canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .footnote-scratch.revealed .footnote-overlay {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.4s ease;
+  }
+
+  .footnote-scratch--plain .footnote-overlay {
+    display: none;
+  }
+
+  .hero-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 320px;
+    margin: 0 auto 7vh;
+    animation: rise 1.1s ease-out 0.28s both;
+  }
+
+  .hero-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .hero-divider-mark {
+    width: 7px;
+    height: 7px;
+    border: 1px solid rgba(140,124,240,0.35);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    box-shadow: 0 0 12px rgba(140,124,240,0.15);
+  }
+
+  .hub {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden;
+    position: relative;
+    animation: rise 1.1s ease-out 0.38s both;
+  }
+
+  .hub::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .hub-item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: transparent;
+    padding: 48px 30px 44px;
+    border-right: 1px solid var(--border);
+    transition: background 0.5s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hub-item:last-child { border-right: none; }
+
+  .hub-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .hub-item.sanctuary::before { background: linear-gradient(90deg, transparent, var(--sanctuary), transparent); }
+  .hub-item.play::before { background: linear-gradient(90deg, transparent, var(--play), transparent); }
+  .hub-item.manual::before { background: linear-gradient(90deg, transparent, var(--manual), transparent); }
+
+  .hub-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  .hub-item.sanctuary::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(140,124,240,0.07) 0%, transparent 70%); }
+  .hub-item.play::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(82,214,180,0.07) 0%, transparent 70%); }
+  .hub-item.manual::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,163,96,0.07) 0%, transparent 70%); }
+
+  .hub-item:hover,
+  .hub-item:focus-visible {
+    background: rgba(27,27,40,0.65);
+  }
+
+  .hub-item:hover::before,
+  .hub-item:focus-visible::before,
+  .hub-item:hover::after,
+  .hub-item:focus-visible::after {
+    opacity: 1;
+  }
+
+  .hub-item:focus-visible {
+    outline: 1px solid var(--text-secondary);
+    outline-offset: -1px;
+  }
+
+  .icon-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    transition: transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .hub-item.sanctuary .icon-ring { border-color: rgba(140,124,240,0.18); }
+  .hub-item.play .icon-ring { border-color: rgba(82,214,180,0.18); }
+  .hub-item.manual .icon-ring { border-color: rgba(232,163,96,0.18); }
+
+  .hub-item:hover .icon-ring,
+  .hub-item:focus-visible .icon-ring {
+    transform: scale(1.08);
+  }
+
+  .hub-item.sanctuary:hover .icon-ring,
+  .hub-item.sanctuary:focus-visible .icon-ring {
+    border-color: rgba(140,124,240,0.45);
+    box-shadow: 0 0 20px rgba(140,124,240,0.12);
+  }
+
+  .hub-item.play:hover .icon-ring,
+  .hub-item.play:focus-visible .icon-ring {
+    border-color: rgba(82,214,180,0.45);
+    box-shadow: 0 0 20px rgba(82,214,180,0.12);
+  }
+
+  .hub-item.manual:hover .icon-ring,
+  .hub-item.manual:focus-visible .icon-ring {
+    border-color: rgba(232,163,96,0.45);
+    box-shadow: 0 0 20px rgba(232,163,96,0.12);
+  }
+
+  .hub-item .icon {
+    width: 22px;
+    height: 22px;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.5s ease;
+  }
+
+  .hub-item:hover .icon,
+  .hub-item:focus-visible .icon {
+    transform: translateY(-1px);
+  }
+
+  .hub-item.sanctuary .icon { color: var(--sanctuary); }
+  .hub-item.play .icon { color: var(--play); }
+  .hub-item.manual .icon { color: var(--manual); }
+
+  .kicker {
+    font-family: 'Mata', 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .hub-item.sanctuary .kicker { color: var(--sanctuary); }
+  .hub-item.play .kicker { color: var(--play); }
+  .hub-item.manual .kicker { color: var(--manual); }
+
+  .hub-item h2 {
+    font-size: 17px;
+    font-weight: 500;
+    margin: 0 0 10px;
+    transition: color 0.4s ease;
+  }
+
+  .hub-item:hover h2,
+  .hub-item:focus-visible h2 {
+    color: var(--text);
+  }
+
+  .hub-item p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin: 0 0 18px;
+  }
+
+  .hub-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.4s ease, transform 0.4s ease, color 0.4s ease;
+  }
+
+  .hub-item:hover .hub-arrow,
+  .hub-item:focus-visible .hub-arrow {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .hub-item.sanctuary:hover .hub-arrow,
+  .hub-item.sanctuary:focus-visible .hub-arrow { color: var(--sanctuary); }
+  .hub-item.play:hover .hub-arrow,
+  .hub-item.play:focus-visible .hub-arrow { color: var(--play); }
+  .hub-item.manual:hover .hub-arrow,
+  .hub-item.manual:focus-visible .hub-arrow { color: var(--manual); }
+
+  .hub-arrow svg {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.4s ease;
+  }
+
+  .hub-item:hover .hub-arrow svg,
+  .hub-item:focus-visible .hub-arrow svg {
+    transform: translateX(3px);
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 8vh;
+    animation: rise 1.1s ease-out 0.5s both;
+  }
+
+  .page-footer-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .page-footer-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  .page-footer-dot:nth-child(1) { background: var(--sanctuary); }
+  .page-footer-dot:nth-child(2) { background: var(--play); }
+  .page-footer-dot:nth-child(3) { background: var(--manual); }
+
+  .page-footer-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    opacity: 0.6;
+  }
+
+  @media (max-width: 720px) {
+    .frame { inset: 16px; }
+    .frame-corner { width: 18px; height: 18px; }
+
+    .hub {
+      grid-template-columns: 1fr;
+    }
+
+    .hub-item {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hub-item:last-child { border-bottom: none; }
+
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-inner,
+    .hero-mark,
+    .logo-wrap,
+    .subhead,
+    .hero-divider,
+    .hub,
+    .page-footer { animation: none; }
+    #glow { display: none; }
+    .grain { animation: none; }
+    .orb { animation: none; }
+    .footnote-scratch.revealed .footnote-overlay { transition: none; }
+    .hub-arrow { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="atmosphere" aria-hidden="true">
+  <div class="grain"></div>
+  <div class="dot-field"></div>
+  <div class="orb orb--sanctuary"></div>
+  <div class="orb orb--play"></div>
+  <div class="orb orb--manual"></div>
+</div>
+
+<div class="frame" aria-hidden="true">
+  <span class="frame-corner frame-corner--tl"></span>
+  <span class="frame-corner frame-corner--tr"></span>
+  <span class="frame-corner frame-corner--bl"></span>
+  <span class="frame-corner frame-corner--br"></span>
+</div>
+
+<div id="glow"></div>
+
+<main>
+  <div class="hero">
+    <div class="hero-inner">
+      <svg class="hero-mark" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" aria-hidden="true">
+        <ellipse cx="12" cy="17" rx="9" ry="2.6"/>
+        <ellipse cx="12.4" cy="12.2" rx="5.2" ry="2" transform="rotate(-11 12.4 12.2)"/>
+        <ellipse cx="11.6" cy="8.2" rx="3" ry="1.35" transform="rotate(9 11.6 8.2)"/>
+      </svg>
+
+      <div class="logo-wrap">
+        <div class="logo-glow" aria-hidden="true"></div>
+        <h1 class="logo">Save Point<span class="mark">*</span></h1>
+      </div>
+
+      <p class="subhead">A place that helps you return, after wandering away from yourself.</p>
+
+      <div class="footnote-scratch" id="footnoteScratch">
+        <p class="footnote" id="footnoteText">technology, used consciously, is still a place where a person can touch something true — concentration, strangeness, wonder, beauty. save point is a tool to explore interfaces that make it easier to find.</p>
+        <div class="footnote-overlay" id="footnoteOverlay" aria-hidden="true">
+          <canvas id="matrixRain"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-divider" aria-hidden="true">
+    <span class="hero-divider-line"></span>
+    <span class="hero-divider-mark"></span>
+    <span class="hero-divider-line"></span>
+  </div>
+
+  <div class="hub">
+    <a href="#sanctuary" class="hub-item sanctuary" data-accent="sanctuary">
+      <div class="icon-wrap">
+        <span class="icon-ring"></span>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l4.5-9L12 20"/><path d="M12 20l4.5-9L21 20"/><path d="M9.5 20L12 15l2.5 5"/></svg>
+      </div>
+      <span class="kicker">Rest</span>
+      <h2>The Sanctuary</h2>
+      <p>Retreats, relaxation practices, and ways back to what's actually in front of you.</p>
+      <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+    </a>
+    <a href="#play" class="hub-item play" data-accent="play">
+      <div class="icon-wrap">
+        <span class="icon-ring"></span>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 12h.01M8 15h.01M6.5 13.5h3"/><path d="M16 12h.01M18 13h.01"/></svg>
+      </div>
+      <span class="kicker">Play</span>
+      <h2>Life at Play</h2>
+      <p>Games can hold real presence, not just distraction. Curated trailers and mindful showcases.</p>
+      <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+    </a>
+    <a href="#manual" class="hub-item manual" data-accent="manual">
+      <div class="icon-wrap">
+        <span class="icon-ring"></span>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 012 2v14l-4-2-4 2-4-2-2 1V6a2 2 0 012-2z"/><path d="M8 9h6M8 13h4"/></svg>
+      </div>
+      <span class="kicker">Practice</span>
+      <h2>The Manual</h2>
+      <p>Practical, not preachy. Habits and protocols for using tech like you meant to.</p>
+      <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+    </a>
+  </div>
+
+  <footer class="page-footer" aria-hidden="true">
+    <div class="page-footer-dots">
+      <span class="page-footer-dot"></span>
+      <span class="page-footer-dot"></span>
+      <span class="page-footer-dot"></span>
+    </div>
+    <p class="page-footer-text">Rest · Play · Practice</p>
+  </footer>
+</main>
+
+<script>
+  // signature glow follows the cursor, slowly — attention, rendered literally
+  const glow = document.getElementById('glow');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const accentColors = {
+    sanctuary: 'rgba(140,124,240,0.07)',
+    play: 'rgba(82,214,180,0.07)',
+    manual: 'rgba(232,163,96,0.07)'
+  };
+
+  if (!reduceMotion && window.matchMedia('(hover: hover)').matches) {
+    document.addEventListener('mousemove', (e) => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+
+    document.querySelectorAll('.hub-item[data-accent]').forEach((item) => {
+      item.addEventListener('mouseenter', () => {
+        const color = accentColors[item.dataset.accent];
+        glow.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
+      });
+      item.addEventListener('mouseleave', () => {
+        glow.style.background = 'radial-gradient(circle, rgba(140,124,240,0.06) 0%, rgba(140,124,240,0) 70%)';
+      });
+    });
+  }
+
+  // the line lives under the subhead, hidden beneath matrix rain —
+  // scratch away in chunks with the cursor to reveal what's underneath
+  (function initFootnoteScratch() {
+    const scratchRoot = document.getElementById('footnoteScratch');
+    const overlay = document.getElementById('footnoteOverlay');
+    const rainCanvas = document.getElementById('matrixRain');
+    if (!scratchRoot || !overlay || !rainCanvas) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      scratchRoot.classList.add('footnote-scratch--plain');
+      return;
+    }
+
+    const rainCtx = rainCanvas.getContext('2d');
+    const maskCanvas = document.createElement('canvas');
+    const maskCtx = maskCanvas.getContext('2d');
+    const chars = 'アイウエオカキクケコサシスセソ0123456789アカサタナハ0123456789';
+    const fontSize = 11;
+    const chunkBase = 14;
+    const scratchRadius = 1;
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let columns = [];
+    let scratchedCells = 0;
+    let totalCells = 0;
+    let animating = true;
+    let pointerDown = false;
+
+    function initMask() {
+      maskCtx.setTransform(1, 0, 0, 1, 0, 0);
+      maskCtx.clearRect(0, 0, width, height);
+      maskCtx.fillStyle = '#fff';
+      maskCtx.fillRect(0, 0, width, height);
+      scratchedCells = 0;
+      const chunkSize = chunkBase * dpr;
+      totalCells = Math.ceil(width / chunkSize) * Math.ceil(height / chunkSize);
+    }
+
+    function initColumns() {
+      const cell = fontSize * dpr;
+      const count = Math.ceil(width / cell) + 1;
+      columns = Array.from({ length: count }, () => ({
+        y: Math.random() * -(height / cell),
+        speed: 0.35 + Math.random() * 0.85
+      }));
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = scratchRoot.getBoundingClientRect();
+      width = Math.max(1, Math.round(rect.width * dpr));
+      height = Math.max(1, Math.round(rect.height * dpr));
+
+      rainCanvas.width = width;
+      rainCanvas.height = height;
+      maskCanvas.width = width;
+      maskCanvas.height = height;
+
+      initMask();
+      initColumns();
+    }
+
+    function scratchAt(clientX, clientY) {
+      const rect = rainCanvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * dpr;
+      const y = (clientY - rect.top) * dpr;
+      const chunkSize = chunkBase * dpr;
+      const col = Math.floor(x / chunkSize);
+      const row = Math.floor(y / chunkSize);
+      let scratched = false;
+
+      for (let dx = -scratchRadius; dx <= scratchRadius; dx++) {
+        for (let dy = -scratchRadius; dy <= scratchRadius; dy++) {
+          const cx = (col + dx) * chunkSize;
+          const cy = (row + dy) * chunkSize;
+          if (cx < 0 || cy < 0 || cx >= width || cy >= height) continue;
+
+          maskCtx.globalCompositeOperation = 'destination-out';
+          maskCtx.fillStyle = 'rgba(0,0,0,1)';
+          maskCtx.fillRect(cx, cy, chunkSize, chunkSize);
+          maskCtx.globalCompositeOperation = 'source-over';
+          scratched = true;
+        }
+      }
+
+      if (scratched) {
+        scratchedCells = Math.min(totalCells, scratchedCells + (2 * scratchRadius + 1) ** 2);
+        if (scratchedCells / totalCells > 0.82) {
+          scratchRoot.classList.add('revealed');
+          animating = false;
+        }
+      }
+    }
+
+    function drawRain() {
+      rainCtx.setTransform(1, 0, 0, 1, 0, 0);
+      rainCtx.clearRect(0, 0, width, height);
+      rainCtx.fillStyle = '#15151F';
+      rainCtx.fillRect(0, 0, width, height);
+
+      rainCtx.font = `500 ${fontSize * dpr}px "IBM Plex Mono", monospace`;
+      rainCtx.textBaseline = 'top';
+      const cell = fontSize * dpr;
+
+      for (let i = 0; i < columns.length; i++) {
+        const col = columns[i];
+        const x = i * cell;
+        const headY = col.y * cell;
+
+        for (let j = 0; j < Math.ceil(height / cell) + 2; j++) {
+          const y = headY - j * cell;
+          if (y < -cell || y > height) continue;
+
+          const char = chars[(i + j + Math.floor(col.y)) % chars.length];
+          const fade = Math.max(0.12, 1 - j * 0.11);
+          const isBright = j === 0;
+
+          if (isBright) {
+            rainCtx.fillStyle = `rgba(237,237,242,${0.55 * fade})`;
+          } else if (i % 4 === 0) {
+            rainCtx.fillStyle = `rgba(82,214,180,${0.42 * fade})`;
+          } else {
+            rainCtx.fillStyle = `rgba(140,124,240,${0.38 * fade})`;
+          }
+
+          rainCtx.fillText(char, x, y);
+        }
+
+        col.y += col.speed * 0.06;
+        if (headY > height && Math.random() > 0.985) {
+          col.y = Math.random() * -8;
+          col.speed = 0.35 + Math.random() * 0.85;
+        }
+      }
+
+      rainCtx.globalCompositeOperation = 'destination-in';
+      rainCtx.drawImage(maskCanvas, 0, 0);
+      rainCtx.globalCompositeOperation = 'source-over';
+    }
+
+    function tick() {
+      if (!animating) return;
+      drawRain();
+      requestAnimationFrame(tick);
+    }
+
+    overlay.addEventListener('pointerdown', (e) => {
+      pointerDown = true;
+      overlay.setPointerCapture(e.pointerId);
+      scratchAt(e.clientX, e.clientY);
+    });
+
+    overlay.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' || pointerDown) {
+        scratchAt(e.clientX, e.clientY);
+      }
+    });
+
+    overlay.addEventListener('pointerup', () => {
+      pointerDown = false;
+    });
+
+    overlay.addEventListener('pointerleave', () => {
+      pointerDown = false;
+    });
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(tick);
+  })();
+</script>
+
+</body>
+</html>
