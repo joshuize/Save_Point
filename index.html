@@ -854,35 +854,43 @@
 <div id="glow"></div>
 
 <main>
-  <div class="hero">
-    <div class="hero-inner">
-      <div class="hero-stones" aria-hidden="true">
-        <div class="hero-stones-flash"></div>
-        <div class="hero-stones-ring"></div>
-        <div class="hero-stones-breathe">
-          <svg viewBox="0 0 108 118" fill="none">
-            <ellipse class="stone stone--shadow" cx="54" cy="103" rx="26" ry="4.5" fill="rgba(0,0,0,0.4)" filter="blur(3px)"/>
-            <ellipse class="stone stone--a" cx="54" cy="88" rx="25" ry="9" fill="rgba(171,168,194,0.16)" stroke="rgba(171,168,194,0.4)" stroke-width="1"/>
-            <ellipse class="stone stone--b" cx="51" cy="68" rx="18" ry="7" fill="rgba(171,168,194,0.19)" stroke="rgba(171,168,194,0.44)" stroke-width="1"/>
-            <ellipse class="stone stone--c" cx="57" cy="51" rx="12.5" ry="5.5" fill="rgba(171,168,194,0.22)" stroke="rgba(171,168,194,0.48)" stroke-width="1"/>
-            <ellipse class="stone stone--d" cx="53" cy="38" rx="7" ry="3.8" fill="rgba(237,237,242,0.28)" stroke="rgba(237,237,242,0.55)" stroke-width="1"/>
-          </svg>
+  <div class="threshold-section" id="thresholdSection">
+    <div class="threshold-sticky">
+      <canvas id="rippleCanvas" aria-hidden="true"></canvas>
+
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-stones" aria-hidden="true">
+            <div class="hero-stones-flash"></div>
+            <div class="hero-stones-ring"></div>
+            <div class="hero-stones-breathe">
+              <svg viewBox="0 0 108 118" fill="none">
+                <ellipse class="stone stone--shadow" cx="54" cy="103" rx="26" ry="4.5" fill="rgba(0,0,0,0.4)" filter="blur(3px)"/>
+                <ellipse class="stone stone--a" cx="54" cy="88" rx="25" ry="9" fill="rgba(171,168,194,0.16)" stroke="rgba(171,168,194,0.4)" stroke-width="1"/>
+                <ellipse class="stone stone--b" cx="51" cy="68" rx="18" ry="7" fill="rgba(171,168,194,0.19)" stroke="rgba(171,168,194,0.44)" stroke-width="1"/>
+                <ellipse class="stone stone--c" cx="57" cy="51" rx="12.5" ry="5.5" fill="rgba(171,168,194,0.22)" stroke="rgba(171,168,194,0.48)" stroke-width="1"/>
+                <ellipse class="stone stone--d" cx="53" cy="38" rx="7" ry="3.8" fill="rgba(237,237,242,0.28)" stroke="rgba(237,237,242,0.55)" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="logo-wrap">
+            <div class="logo-glow" aria-hidden="true"></div>
+            <h1 class="logo">Save Point<span class="mark">*</span></h1>
+          </div>
+
+          <p class="subhead">A place that helps you return, after wandering away from yourself.</p>
+
+          <div class="footnote-scratch" id="footnoteScratch">
+            <p class="footnote" id="footnoteText">technology, used consciously, is still a place where a person can touch something true — concentration, strangeness, wonder, beauty. save point is a tool to explore interfaces that make it easier to find.</p>
+            <div class="footnote-overlay" id="footnoteOverlay" aria-hidden="true">
+              <canvas id="matrixRain"></canvas>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="logo-wrap">
-        <div class="logo-glow" aria-hidden="true"></div>
-        <h1 class="logo">Save Point<span class="mark">*</span></h1>
-      </div>
-
-      <p class="subhead">A place that helps you return, after wandering away from yourself.</p>
-
-      <div class="footnote-scratch" id="footnoteScratch">
-        <p class="footnote" id="footnoteText">technology, used consciously, is still a place where a person can touch something true — concentration, strangeness, wonder, beauty. save point is a tool to explore interfaces that make it easier to find.</p>
-        <div class="footnote-overlay" id="footnoteOverlay" aria-hidden="true">
-          <canvas id="matrixRain"></canvas>
-        </div>
-      </div>
+      <div class="scroll-cue" id="scrollCue">SCROLL</div>
     </div>
   </div>
 
@@ -891,6 +899,7 @@
     <span class="hero-divider-mark"></span>
     <span class="hero-divider-line"></span>
   </div>
+
 
   <div class="hub-sphere-wrap" id="hubSphereWrap">
     <div class="atmosphere-lower" aria-hidden="true">
