@@ -562,6 +562,11 @@
     position: relative;
     width: 100%;
     z-index: 2;
+    transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hub.idle-dim {
+    opacity: 0.26;
   }
 
   .hub::before {
@@ -1525,6 +1530,29 @@
       wrap.addEventListener('pointerleave', () => { pointer.active = false; });
     }
 
+    // idle / "screensaver" mode — after 5s with no page activity, while the
+    // sphere is substantially in view, the cards around it dim so the
+    // sphere reads as the point of focus. Any activity ends it instantly.
+    const hubGrid = wrap.querySelector('.hub');
+    const IDLE_THRESHOLD = 5000;
+    let lastActivity = performance.now();
+    let idleMode = false;
+
+    function markActive() {
+      lastActivity = performance.now();
+      if (idleMode) {
+        idleMode = false;
+        if (hubGrid) hubGrid.classList.remove('idle-dim');
+      }
+    }
+    if (!isTouch) {
+      window.addEventListener('pointermove', markActive, { passive: true });
+      window.addEventListener('wheel', markActive, { passive: true });
+    }
+    window.addEventListener('pointerdown', markActive, { passive: true });
+    window.addEventListener('keydown', markActive);
+    window.addEventListener('touchstart', markActive, { passive: true });
+
     // idle motion: a bounded, slow wobble — regions stay roughly where the
     // eye expects them (left / center / right), and the pace matches a
     // slower-paced place rather than a spinning display
@@ -1536,6 +1564,7 @@
 
     let hoveredRegion = null;
     let hoverAmount = 0;
+    let proximityAmount = 0; // magnetic resistance — rises as the cursor nears the sphere itself
 
     // a virtual clock that only advances at the current (possibly slowed)
     // pace — avoids the jump/lurch you get from rescaling the raw, ever-
@@ -1583,10 +1612,32 @@
       const dt = Math.min(timestamp - lastFrameTime, 100); // clamp huge gaps (tab backgrounded, etc.)
       lastFrameTime = timestamp;
 
+      // magnetic resistance — the closer the cursor sits to the sphere,
+      // the more it drags on the rotation, independent of hovering a card
+      let proximityTarget = 0;
+      if (pointer.active) {
+        const dx = pointer.x - cx, dy = pointer.y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const frictionRadius = R * 1.35;
+        if (dist < frictionRadius) proximityTarget = 1 - dist / frictionRadius;
+      }
+      proximityAmount += (proximityTarget - proximityAmount) * 0.04;
+
       const hoverTarget = hoveredRegion ? 1 : 0;
       hoverAmount += (hoverTarget - hoverAmount) * 0.035;
-      const timeScale = 1 - hoverAmount * 0.45;
+      const timeScale = Math.max(0.12, 1 - hoverAmount * 0.45 - proximityAmount * 0.3);
       virtualTime += dt * timeScale;
+
+      // idle / screensaver check — only while the sphere is substantially
+      // in view, so reading the hero above never gets dimmed underneath you
+      if (!idleMode && !morphing && (timestamp - lastActivity) > IDLE_THRESHOLD) {
+        const wrapRect = wrap.getBoundingClientRect();
+        const inView = wrapRect.top < window.innerHeight * 0.75 && wrapRect.bottom > window.innerHeight * 0.25;
+        if (inView) {
+          idleMode = true;
+          if (hubGrid) hubGrid.classList.add('idle-dim');
+        }
+      }
 
       let angY;
       let angX;
