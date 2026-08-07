@@ -10,7 +10,7 @@ Still Point is an ongoing digital garden exploring the intersection of art, writ
 
 
 
-It is built on a simple idea:
+It's built on a simple idea:
 
 
 
