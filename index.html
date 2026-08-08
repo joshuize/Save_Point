@@ -516,13 +516,26 @@
     box-shadow: 0 0 12px rgba(140,124,240,0.15);
   }
 
-  /* ── spatial sphere: the three hubs, held as one shape, verbal on request ── */
+  /* ── spatial sphere: the three hubs, held as one shape, verbal on request.
+     Pinned now, not just a static block — resting while portals are live,
+     then (if no portal is chosen) tilting, parting, and gathering a small
+     glow as scroll continues past. One sphere throughout, not a handoff
+     between two. ── */
   .hub-sphere-wrap {
     position: relative;
+    height: 340vh;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+
+  .hub-sphere-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 760px;
     animation: rise 1.1s ease-out 0.38s both;
   }
 
@@ -557,17 +570,27 @@
     z-index: 1;
   }
 
+  /* the small, faint glow that gathers at the center once the sphere has
+     parted — not a wash over the whole shape, just something glimpsed */
+  .aperture-glow-wash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .aperture-glow-wash-core {
+    position: absolute;
+    inset: 0;
+  }
+
   .hub {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     position: relative;
     width: 100%;
     z-index: 2;
-    transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .hub.idle-dim {
-    opacity: 0.26;
   }
 
   .hub::before {
@@ -600,11 +623,13 @@
   }
 
   .hub-sphere-wrap.sphere-failed .hub-sphere-glow,
-  .hub-sphere-wrap.sphere-failed .hub-sphere-canvas {
+  .hub-sphere-wrap.sphere-failed .hub-sphere-canvas,
+  .hub-sphere-wrap.sphere-failed .aperture-glow-wash {
     display: none;
   }
   .hub-sphere-wrap.sphere-failed .hub::before { opacity: 0.55; }
   .hub-sphere-wrap.sphere-failed { height: auto; }
+  .hub-sphere-wrap.sphere-failed .hub-sphere-sticky { position: relative; height: auto; overflow: visible; }
 
 
   .hub-item::before {
@@ -839,6 +864,15 @@
 
     .hub-sphere-wrap {
       height: auto;
+      width: auto;
+      margin-left: 0;
+    }
+    .hub-sphere-sticky {
+      position: relative;
+      height: auto;
+      overflow: visible;
+      display: block;
+      animation: none;
     }
 
     .hub {
@@ -853,7 +887,8 @@
     .hub-item:last-child { border-bottom: none; }
 
     .hub-sphere-glow,
-    .hub-sphere-canvas { display: none; }
+    .hub-sphere-canvas,
+    .aperture-glow-wash { display: none; }
     .hub::before { opacity: 0.55; }
   }
 
@@ -888,8 +923,10 @@
     .stone--d { animation: none; opacity: 1; transform: translateY(0) rotate(-14deg); }
 
     .hub-sphere-glow,
-    .hub-sphere-canvas { display: none; }
-    .hub-sphere-wrap { height: auto; }
+    .hub-sphere-canvas,
+    .aperture-glow-wash { display: none; }
+    .hub-sphere-wrap { height: auto; width: auto; margin-left: 0; }
+    .hub-sphere-sticky { position: relative; height: auto; overflow: visible; display: block; animation: none; }
     .hub::before { opacity: 0.55; }
   }
 </style>
@@ -964,43 +1001,48 @@
 
 
   <div class="hub-sphere-wrap" id="hubSphereWrap">
-    <div class="atmosphere-lower" aria-hidden="true">
-      <div class="orb orb--manual"></div>
-    </div>
-    <div class="hub-sphere-glow" aria-hidden="true"></div>
-    <canvas class="hub-sphere-canvas" id="sphereCanvas" aria-hidden="true"></canvas>
+    <div class="hub-sphere-sticky">
+      <div class="atmosphere-lower" aria-hidden="true">
+        <div class="orb orb--manual"></div>
+      </div>
+      <div class="hub-sphere-glow" aria-hidden="true"></div>
+      <canvas class="hub-sphere-canvas" id="sphereCanvas" aria-hidden="true"></canvas>
+      <div class="aperture-glow-wash" id="apertureGlowWash" aria-hidden="true">
+        <div class="aperture-glow-wash-core" id="apertureGlowWashCore"></div>
+      </div>
 
-    <div class="hub">
-      <a href="#sanctuary" class="hub-item sanctuary" data-accent="sanctuary">
-        <div class="icon-wrap">
-          <span class="icon-ring"></span>
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l4.5-9L12 20"/><path d="M12 20l4.5-9L21 20"/><path d="M9.5 20L12 15l2.5 5"/></svg>
-        </div>
-        <span class="kicker">Rest</span>
-        <h2>The Sanctuary</h2>
-        <p>Retreats, relaxation practices, and ways back to what's actually in front of you.</p>
-        <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
-      </a>
-      <a href="#play" class="hub-item play" data-accent="play">
-        <div class="icon-wrap">
-          <span class="icon-ring"></span>
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 12h.01M8 15h.01M6.5 13.5h3"/><path d="M16 12h.01M18 13h.01"/></svg>
-        </div>
-        <span class="kicker">Play</span>
-        <h2>Life at Play</h2>
-        <p>Games can hold real presence, not just distraction. Curated trailers and mindful showcases.</p>
-        <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
-      </a>
-      <a href="#manual" class="hub-item manual" data-accent="manual">
-        <div class="icon-wrap">
-          <span class="icon-ring"></span>
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 012 2v14l-4-2-4 2-4-2-2 1V6a2 2 0 012-2z"/><path d="M8 9h6M8 13h4"/></svg>
-        </div>
-        <span class="kicker">Practice</span>
-        <h2>The Manual</h2>
-        <p>Practical, not preachy. Habits and protocols for using tech like you meant to.</p>
-        <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
-      </a>
+      <div class="hub">
+        <a href="#sanctuary" class="hub-item sanctuary" data-accent="sanctuary">
+          <div class="icon-wrap">
+            <span class="icon-ring"></span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l4.5-9L12 20"/><path d="M12 20l4.5-9L21 20"/><path d="M9.5 20L12 15l2.5 5"/></svg>
+          </div>
+          <span class="kicker">Rest</span>
+          <h2>The Sanctuary</h2>
+          <p>Retreats, relaxation practices, and ways back to what's actually in front of you.</p>
+          <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+        </a>
+        <a href="#play" class="hub-item play" data-accent="play">
+          <div class="icon-wrap">
+            <span class="icon-ring"></span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 12h.01M8 15h.01M6.5 13.5h3"/><path d="M16 12h.01M18 13h.01"/></svg>
+          </div>
+          <span class="kicker">Play</span>
+          <h2>Life at Play</h2>
+          <p>Games can hold real presence, not just distraction. Curated trailers and mindful showcases.</p>
+          <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+        </a>
+        <a href="#manual" class="hub-item manual" data-accent="manual">
+          <div class="icon-wrap">
+            <span class="icon-ring"></span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 012 2v14l-4-2-4 2-4-2-2 1V6a2 2 0 012-2z"/><path d="M8 9h6M8 13h4"/></svg>
+          </div>
+          <span class="kicker">Practice</span>
+          <h2>The Manual</h2>
+          <p>Practical, not preachy. Habits and protocols for using tech like you meant to.</p>
+          <span class="hub-arrow">Enter <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
+        </a>
+      </div>
     </div>
   </div>
 
@@ -1391,6 +1433,14 @@
       manual: { center: [0.9397, 0, -0.3420], color: [232, 163, 96] }
     };
 
+    // the passage: elements + palette for what happens if scroll continues
+    // past the sphere instead of a portal being chosen. Reuses regions.manual
+    // rather than inventing a new color for the "inside the globe" glow.
+    const glowWash = document.getElementById('apertureGlowWash');
+    const glowWashCore = document.getElementById('apertureGlowWashCore');
+    const AMBER = regions.manual.color;
+    const WARM_CORE = [249, 232, 215];
+
     // Fibonacci sphere point distribution, each point assigned to whichever
     // region center it sits closest to — three continents on one held sphere.
     const POINT_COUNT = 170;
@@ -1484,6 +1534,7 @@
     function rgba(color, alpha) {
       return 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + clamp(alpha, 0, 1) + ')';
     }
+    function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
     function rotatePoint(x, y, z, angY, angX) {
       const x1 = x * Math.cos(angY) + z * Math.sin(angY);
@@ -1494,7 +1545,8 @@
       return [x1, y2, z2];
     }
 
-    const CAMERA_D = 2.6;
+    const CAMERA_D_REST = 2.6;
+    const CAMERA_D_NEAR = 1.25; // how close the "camera" gets once fully through the aperture
     let cssWidth = 0;
     let cssHeight = 0;
     let dpr = 1;
@@ -1534,6 +1586,8 @@
     // idle / "screensaver" mode — after 5s with no page activity, while the
     // sphere is substantially in view, the cards around it dim so the
     // sphere reads as the point of focus. Any activity ends it instantly.
+    // (opacity itself is applied once, centrally, in draw() — combined
+    // with the scroll-driven portal fade below rather than fighting it.)
     const hubGrid = wrap.querySelector('.hub');
     const IDLE_THRESHOLD = 5000;
     let lastActivity = performance.now();
@@ -1541,10 +1595,7 @@
 
     function markActive() {
       lastActivity = performance.now();
-      if (idleMode) {
-        idleMode = false;
-        if (hubGrid) hubGrid.classList.remove('idle-dim');
-      }
+      idleMode = false;
     }
     if (!isTouch) {
       window.addEventListener('pointermove', markActive, { passive: true });
@@ -1553,6 +1604,33 @@
     window.addEventListener('pointerdown', markActive, { passive: true });
     window.addEventListener('keydown', markActive);
     window.addEventListener('touchstart', markActive, { passive: true });
+
+    // ── the passage: scroll progress across the whole pinned section.
+    // Early on (RESTING band) nothing here changes — same idle wobble,
+    // same hover/click, exactly as before. Only once someone scrolls
+    // past that resting point does the sphere tilt, part, and gather
+    // its small glow. One progress value drives everything below.
+    function getRawProgress() {
+      const rect = wrap.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      if (total <= 0) return 0;
+      return clamp(-rect.top / total, 0, 1);
+    }
+
+    let smoothProgress = 0;
+    const PROGRESS_SMOOTHING = 0.08;
+
+    const RESTING_END = 0.24;       // portals fully live, nothing scripted moves
+    const FADE_BAND = [0.20, 0.32]; // portals fade out, pointer-events drop
+    const TILT_BAND = [0.24, 0.58];
+    const APERTURE_BAND = [0.50, 0.87];
+    const ZOOM_BAND = [0.50, 0.90];
+    const GLOW_BAND = [0.76, 0.90];
+    const PUFF_BAND = [0.82, 0.90];
+
+    const TILT_TARGET = 0.85;
+    const MAX_APERTURE_THRESHOLD = 1.05;
+    const APERTURE_PUSH = 1.7;
 
     // idle motion: a bounded, slow wobble — regions stay roughly where the
     // eye expects them (left / center / right), and the pace matches a
@@ -1566,6 +1644,7 @@
     let hoveredRegion = null;
     let hoverAmount = 0;
     let proximityAmount = 0; // magnetic resistance — rises as the cursor nears the sphere itself
+    let idleDimAmount = 0; // smoothed idle-dim, now applied in JS since .hub no longer has a CSS transition fighting the per-frame scroll fade
 
     // a virtual clock that only advances at the current (possibly slowed)
     // pace — avoids the jump/lurch you get from rescaling the raw, ever-
@@ -1613,6 +1692,19 @@
       const dt = Math.min(timestamp - lastFrameTime, 100); // clamp huge gaps (tab backgrounded, etc.)
       lastFrameTime = timestamp;
 
+      const rawProgress = getRawProgress();
+      smoothProgress += (rawProgress - smoothProgress) * PROGRESS_SMOOTHING;
+      const passageP = smoothProgress;
+
+      const fadeT = mapRange(passageP, FADE_BAND[0], FADE_BAND[1], 0, 1);
+      const tiltT = easeInOutCubic(mapRange(passageP, TILT_BAND[0], TILT_BAND[1], 0, 1));
+      const apertureT = easeInOutCubic(mapRange(passageP, APERTURE_BAND[0], APERTURE_BAND[1], 0, 1));
+      const zoomT = easeInOutCubic(mapRange(passageP, ZOOM_BAND[0], ZOOM_BAND[1], 0, 1));
+      const glowT = mapRange(passageP, GLOW_BAND[0], GLOW_BAND[1], 0, 1);
+      const puffRaw = mapRange(passageP, PUFF_BAND[0], PUFF_BAND[1], 0, 1);
+      const puff = Math.sin(puffRaw * Math.PI);
+      const CAMERA_D = lerp(CAMERA_D_REST, CAMERA_D_NEAR, zoomT);
+
       // magnetic resistance — the closer the cursor sits to the sphere,
       // the more it drags on the rotation, independent of hovering a card
       let proximityTarget = 0;
@@ -1629,15 +1721,20 @@
       const timeScale = Math.max(0.12, 1 - hoverAmount * 0.45 - proximityAmount * 0.3);
       virtualTime += dt * timeScale;
 
-      // idle / screensaver check — only while the sphere is substantially
-      // in view, so reading the hero above never gets dimmed underneath you
-      if (!idleMode && !morphing && (timestamp - lastActivity) > IDLE_THRESHOLD) {
+      // idle / screensaver check — only while still resting (once the
+      // passage has started, the portals are already on their way out,
+      // so dimming them further for idleness doesn't mean anything)
+      if (!idleMode && !morphing && fadeT < 0.02 && (timestamp - lastActivity) > IDLE_THRESHOLD) {
         const wrapRect = wrap.getBoundingClientRect();
         const inView = wrapRect.top < window.innerHeight * 0.75 && wrapRect.bottom > window.innerHeight * 0.25;
-        if (inView) {
-          idleMode = true;
-          if (hubGrid) hubGrid.classList.add('idle-dim');
-        }
+        if (inView) idleMode = true;
+      }
+
+      if (hubGrid) {
+        idleDimAmount += ((idleMode ? 1 : 0) - idleDimAmount) * 0.04;
+        const hubOpacity = (1 - fadeT) * lerp(1, 0.26, idleDimAmount);
+        hubGrid.style.opacity = hubOpacity;
+        hubGrid.style.pointerEvents = fadeT > 0.4 ? 'none' : '';
       }
 
       let angY;
@@ -1647,7 +1744,8 @@
         angX = capturedAngX;
       } else {
         angY = ROT_Y_AMP * Math.sin((virtualTime / ROT_Y_PERIOD) * Math.PI * 2);
-        angX = ROT_X_AMP * Math.sin((virtualTime / ROT_X_PERIOD) * Math.PI * 2 + ROT_X_PHASE);
+        const idleAngX = ROT_X_AMP * Math.sin((virtualTime / ROT_X_PERIOD) * Math.PI * 2 + ROT_X_PHASE);
+        angX = lerp(idleAngX, TILT_TARGET, tiltT);
         capturedAngY = angY;
         capturedAngX = angX;
       }
@@ -1677,7 +1775,30 @@
           pz = lerp(p.z, p.z * tighten + c[2] * (1 - tighten), settleProgress);
         }
 
-        const [rx, ry, rz] = rotatePoint(px, py, pz, angY, angX);
+        const [rx0, ry0, rz] = rotatePoint(px, py, pz, angY, angX);
+        let rx = rx0, ry = ry0;
+        let alphaMul = 1;
+        let colorBoost = 0;
+
+        // the aperture: computed on the ROTATED point, so the gap always
+        // opens dead-center on screen no matter how the tilt has turned
+        // the sphere — a tilt, not a redirect
+        if (apertureT > 0.001) {
+          const angle = Math.acos(clamp(rz, -1, 1));
+          const threshold = apertureT * MAX_APERTURE_THRESHOLD;
+          if (angle < threshold) {
+            const f = 1 - angle / threshold;
+            const perpLen = Math.sqrt(rx * rx + ry * ry) || 0.0001;
+            const pxDir = rx / perpLen, pyDir = ry / perpLen;
+            const push = f * apertureT * APERTURE_PUSH;
+            rx += pxDir * push;
+            ry += pyDir * push;
+            alphaMul = clamp(1 - f * apertureT * 0.95, 0, 1);
+            const rimCloseness = 1 - Math.min(Math.abs(angle - threshold) / 0.16, 1);
+            if (rimCloseness > 0) colorBoost = rimCloseness * 0.8;
+          }
+        }
+
         const scale = CAMERA_D / (CAMERA_D - rz);
         return {
           idx,
@@ -1685,7 +1806,9 @@
           screenX: cx + rx * scale * R,
           screenY: cy + ry * scale * R,
           rz,
-          scale
+          scale,
+          alphaMul,
+          colorBoost
         };
       });
 
@@ -1726,7 +1849,7 @@
 
       for (const p of projected) {
         const regionDef = regions[p.region];
-        let alpha = mapRange(p.rz, -1, 1, 0.16, 0.8);
+        let alpha = mapRange(p.rz, -1, 1, 0.16, 0.8) * p.alphaMul;
         let radius = 1.15 + (p.scale - 0.75) * 2.1;
 
         if (!morphing) {
@@ -1747,11 +1870,19 @@
           }
         }
 
+        if (alpha < 0.008) continue;
+
+        const color = p.colorBoost > 0 ? [
+          lerp(regionDef.color[0], 237, p.colorBoost),
+          lerp(regionDef.color[1], 237, p.colorBoost),
+          lerp(regionDef.color[2], 242, p.colorBoost)
+        ] : regionDef.color;
+
         radius = clamp(radius, 0.4, 4.2);
         ctx.beginPath();
-        ctx.fillStyle = rgba(regionDef.color, alpha);
+        ctx.fillStyle = rgba(color, alpha);
         ctx.shadowBlur = radius * 2.4;
-        ctx.shadowColor = rgba(regionDef.color, Math.min(0.6, alpha));
+        ctx.shadowColor = rgba(color, Math.min(0.6, alpha));
         ctx.arc(p.screenX, p.screenY, radius, 0, Math.PI * 2);
         ctx.fill();
       }
@@ -1776,6 +1907,20 @@
         ctx.fillStyle = rgba(m.tint, clamp(m.alphaBase + boost * 0.5, 0, 0.9));
         ctx.arc(m.x, m.y, m.size * (1 + boost * 0.8), 0, Math.PI * 2);
         ctx.fill();
+      }
+
+      // the small, faint glow that gathers once the sphere has parted —
+      // sized off the sphere's own radius, not the viewport, so it stays
+      // a contained presence rather than a wash over everything
+      if (glowWash && glowWashCore) {
+        const glowRadius = R * 0.5 * Math.max(glowT, puff * 0.6);
+        const washAlpha = Math.min(0.6, glowT * 0.65) + puff * 0.3;
+        glowWash.style.opacity = washAlpha;
+        glowWashCore.style.background =
+          'radial-gradient(circle ' + Math.max(1, glowRadius).toFixed(0) + 'px at 50% 50%, ' +
+          rgba(WARM_CORE, Math.min(0.75, puff * 0.7 + glowT * 0.25)) + ' 0%, ' +
+          rgba(AMBER, 0.4 * glowT) + ' 45%, ' +
+          'transparent 100%)';
       }
 
       if (morphing && morphElapsed >= 630 && morphElapsed <= 650) {
